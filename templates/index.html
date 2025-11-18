@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Coalition - Arms Dealer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Modal -->
+        <div class="modal-overlay" id="welcome-modal">
+            <div class="modal-content">
+                <h1>🎮 GLOBAL COALITION</h1>
+                <h2 id="welcome-title">CREATE YOUR PROFILE</h2>
+                <div class="welcome-inputs">
+                    <input type="text" id="player-name" placeholder="Your Name" maxlength="20">
+                    <input type="text" id="company-name" placeholder="Company Name" maxlength="30">
+                    <button class="start-btn" id="start-game-btn">START</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game -->
+        <div class="game-header">
+            <div class="user-info">
+                <div id="user-display"></div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Balance:</span>
+                    <span class="stat-value" id="balance">$100.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Inventory Items:</span>
+                    <span class="stat-value" id="inventory-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Value:</span>
+                    <span class="stat-value" id="total-value">$0.00</span>
+                </div>
+            </div>
+            <button class="menu-btn" id="menu-btn">⚙️ MENU</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="inventory">📦 Inventory</button>
+            <button class="tab-btn" data-tab="market">🏪 Marketplace</button>
+            <button class="tab-btn" data-tab="gambling">🎰 Gambling</button>
+            <button class="tab-btn" data-tab="leaderboard">🏆 Leaderboard</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-content active" id="inventory-tab">
+            <div class="inventory-section">
+                <div class="inventory-header">
+                    <h2>Your Inventory</h2>
+                    <div class="inventory-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="covert">Covert</button>
+                        <button class="filter-btn" data-filter="classified">Classified</button>
+                        <button class="filter-btn" data-filter="restricted">Restricted</button>
+                        <button class="filter-btn" data-filter="mil-spec">Mil-Spec</button>
+                    </div>
+                </div>
+                <div class="inventory-grid" id="inventory"></div>
+                <div class="inventory-empty" id="inventory-empty">
+                    <p>Your inventory is empty. Visit the Marketplace to buy items!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="market-tab">
+            <div class="market-section">
+                <h2>🏪 Marketplace</h2>
+                <div class="market-controls">
+                    <button class="btn" id="list-item-btn">📤 List Item for Sale</button>
+                    <div class="market-filters">
+                        <input type="text" id="market-search" placeholder="Search items...">
+                        <select id="market-filter-rarity">
+                            <option value="all">All Rarities</option>
+                            <option value="covert">Covert</option>
+                            <option value="classified">Classified</option>
+                            <option value="restricted">Restricted</option>
+                            <option value="mil-spec">Mil-Spec</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="market-listings" id="market-listings"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="gambling-tab">
+            <div class="gambling-section">
+                <h2>🎰 Casino</h2>
+                
+                <!-- Coin Flip -->
+                <div class="game-card">
+                    <h3>🪙 Coin Flip</h3>
+                    <p>50/50 chance - Double your money!</p>
+                    <div class="coin-flip-game">
+                        <div class="coin" id="coin">
+                            <div class="coin-side heads">HEADS</div>
+                            <div class="coin-side tails">TAILS</div>
+                        </div>
+                        <div class="bet-controls">
+                            <input type="number" id="coin-bet" placeholder="Bet amount" min="1" step="1">
+                            <div class="choice-buttons">
+                                <button class="choice-btn" data-choice="heads">Bet HEADS</button>
+                                <button class="choice-btn" data-choice="tails">Bet TAILS</button>
+                            </div>
+                        </div>
+                        <div class="game-result" id="coin-result"></div>
+                    </div>
+                </div>
+
+                <!-- Blackjack -->
+                <div class="game-card">
+                    <h3>🃏 Blackjack</h3>
+                    <p>Beat the dealer - Get 21 or closer!</p>
+                    <div class="blackjack-game">
+                        <div class="blackjack-bet" id="blackjack-bet-screen">
+                            <input type="number" id="blackjack-bet-input" placeholder="Bet amount" min="1" step="1">
+                            <button class="btn" id="start-blackjack">Start Game</button>
+                        </div>
+                        <div class="blackjack-table" id="blackjack-table" style="display: none;">
+                            <div class="dealer-area">
+                                <h4>Dealer: <span id="dealer-score">0</span></h4>
+                                <div class="cards" id="dealer-cards"></div>
+                            </div>
+                            <div class="player-area">
+                                <h4>You: <span id="player-score">0</span></h4>
+                                <div class="cards" id="player-cards"></div>
+                            </div>
+                            <div class="blackjack-controls">
+                                <button class="btn" id="hit-btn">Hit</button>
+                                <button class="btn" id="stand-btn">Stand</button>
+                                <button class="btn" id="double-btn">Double Down</button>
+                            </div>
+                        </div>
+                        <div class="game-result" id="blackjack-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="leaderboard-tab">
+            <div class="leaderboard-section">
+                <h2 id="leaderboard-title">🏆 Global Leaderboard</h2>
+                <div class="leaderboard-list" id="leaderboard-list"></div>
+            </div>
+        </div>
+
+        <!-- List Item Modal -->
+        <div class="modal-overlay hidden" id="list-item-modal">
+            <div class="modal-content">
+                <h2>📤 List Item for Sale</h2>
+                <div id="list-item-selection"></div>
+                <button class="btn cancel-btn" id="cancel-list">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Game Menu Modal -->
+        <div class="modal-overlay hidden" id="game-menu-modal">
+            <div class="modal-content">
+                <h2>⚙️ Game Menu</h2>
+                <div class="menu-buttons">
+                    <button class="menu-btn-large" id="new-game-btn">🆕 New Game</button>
+                    <button class="menu-btn-large" id="reset-hwid-btn">🔄 Reset User ID</button>
+                    <button class="menu-btn-large cancel-btn" id="close-menu-btn">✖️ Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
